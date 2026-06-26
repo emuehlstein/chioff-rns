@@ -14,6 +14,10 @@ sudo cp reticulum/config/reticulum.config /etc/reticulum/config
 sudo cp reticulum/config/nomadnet.config /etc/reticulum/nomadnetconfig
 sudo chown -R rns:rns /etc/reticulum
 
+echo "==> Deploying landing page"
+sudo mkdir -p /srv/rns-landing
+sudo cp rns-landing/index.html /srv/rns-landing/index.html
+
 echo "==> Restarting services"
 sudo systemctl restart rnsd lxmd
 
