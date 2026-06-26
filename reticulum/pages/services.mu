@@ -24,6 +24,12 @@ community. All are open and free to use.
 `F3f1  >>  `!`FfffNomadNet Node`!
 `Ffff     You're reading it. Pages served over Reticulum.
 
+`F3f1  >>  `!`FfffRelay Chat (rrcd)`! `Ffb3`!LIVE`!
+`Ffff     Real-time IRC-style chat rooms over Reticulum.
+     Hub: `Ffb3Chicago Offline`Ffff
+     Hash: `Ffb3215f9cc1867ea027cdddfe459bce3033
+`Ffff     Join `!chicagooffline`! — clients auto-discover the hub.
+
 `F0cf
 -
 
