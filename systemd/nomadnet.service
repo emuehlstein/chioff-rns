@@ -1,0 +1,19 @@
+[Unit]
+Description=NomadNet Node (headless)
+After=network.target rnsd.service
+Requires=rnsd.service
+
+[Service]
+Type=simple
+User=rns
+Group=rns
+Environment=PATH=/home/rns/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=HOME=/home/rns
+ExecStart=/home/rns/.local/bin/nomadnet --daemon --console --config /etc/reticulum --rnsconfig /etc/reticulum
+Restart=on-failure
+RestartSec=10s
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
