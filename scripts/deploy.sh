@@ -17,6 +17,8 @@ sudo chown -R rns:rns /etc/reticulum
 echo "==> Deploying landing page"
 sudo mkdir -p /srv/rns-landing
 sudo cp rns-landing/index.html /srv/rns-landing/index.html
+sudo cp reticulum/pages/*.mu /home/rns/.nomadnetwork/storage/pages/
+sudo chown -R rns:rns /home/rns/.nomadnetwork/storage/pages
 
 echo "==> Restarting services"
 sudo systemctl restart rnsd lxmd nomadnet

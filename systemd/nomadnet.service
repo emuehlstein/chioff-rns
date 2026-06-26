@@ -9,7 +9,7 @@ User=rns
 Group=rns
 Environment=PATH=/home/rns/.local/bin:/usr/local/bin:/usr/bin:/bin
 Environment=HOME=/home/rns
-ExecStart=/home/rns/.local/bin/nomadnet --daemon --console --config /etc/reticulum --rnsconfig /etc/reticulum
+ExecStart=/home/rns/.local/bin/nomadnet --daemon --console --rnsconfig /etc/reticulum
 Restart=on-failure
 RestartSec=10s
 StandardOutput=journal
