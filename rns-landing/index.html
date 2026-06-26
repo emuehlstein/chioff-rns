@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reticulum Node — Chicago Offline</title>
+  <style>
+    :root { --cyan:#00E5FF; --amber:#FFB300; --green:#39FF14; --bg:#0a0e14; --surface:#111820; --text:#c8ccd0; --text-bright:#e8ecf0; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Courier New',monospace; background:var(--bg); color:var(--text); min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:2rem 1rem; }
+    .container { max-width:720px; width:100%; }
+    h1 { color:var(--cyan); font-size:1.6rem; margin-bottom:0.25rem; }
+    .subtitle { color:var(--amber); font-size:0.95rem; margin-bottom:2rem; }
+    .card { background:var(--surface); border:1px solid #1e2530; border-radius:8px; padding:1.5rem; margin-bottom:1.25rem; }
+    .card h2 { color:var(--green); font-size:1.05rem; margin-bottom:0.75rem; }
+    .card h3 { color:var(--amber); font-size:0.95rem; margin-top:1rem; margin-bottom:0.5rem; }
+    .card p,.card li { line-height:1.6; font-size:0.9rem; }
+    .card ul { list-style:none; padding-left:1rem; }
+    .card ul li::before { content:"▸ "; color:var(--cyan); }
+    pre { background:#080c10; border:1px solid #1a1f28; border-radius:6px; padding:1rem; overflow-x:auto; font-size:0.82rem; color:var(--text-bright); margin-top:0.75rem; line-height:1.5; }
+    .copy-block { position:relative; }
+    .copy-btn { position:absolute; top:0.4rem; right:0.4rem; background:#1a2030; border:1px solid #2a3040; color:var(--cyan); font-family:'Courier New',monospace; font-size:0.7rem; padding:0.2rem 0.5rem; border-radius:3px; cursor:pointer; opacity:0.7; transition:opacity 0.15s; }
+    .copy-btn:hover { opacity:1; }
+    .status { display:inline-block; background:var(--green); color:#000; padding:0.15rem 0.6rem; border-radius:4px; font-size:0.75rem; font-weight:bold; margin-left:0.5rem; }
+    .step { display:flex; gap:0.75rem; margin-bottom:0.75rem; align-items:flex-start; }
+    .step-num { flex-shrink:0; width:1.5rem; height:1.5rem; background:var(--cyan); color:#000; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:bold; margin-top:0.1rem; }
+    .step-body { flex:1; }
+    a { color:var(--cyan); }
+    footer { margin-top:2rem; color:#555; font-size:0.8rem; text-align:center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📡 Chicago Offline — Reticulum Node</h1>
+    <p class="subtitle">Transport · LXMF · NomadNet</p>
+
+    <div class="card">
+      <h2>Services <span class="status">ONLINE</span></h2>
+      <ul>
+        <li><strong>Reticulum Transport</strong> — routes traffic, relays announces, serves path requests</li>
+        <li><strong>LXMF Propagation</strong> — stores and forwards encrypted messages for offline users</li>
+        <li><strong>NomadNet Node</strong> — serves pages and info over the Reticulum network</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Connect to the Transport Node</h2>
+      <p>Add this to your <code>~/.reticulum/config</code> under <code>[interfaces]</code>:</p>
+      <div class="copy-block">
+        <pre id="tcp-config">  [[Chicago Offline]]
+    type = TCPClientInterface
+    enabled = yes
+    target_host = rns.chicagooffline.com
+    target_port = 4242</pre>
+        <button class="copy-btn" onclick="copyText('tcp-config',this)">copy</button>
+      </div>
+      <p style="margin-top:0.75rem;">Works with <a href="https://github.com/markqvist/Sideband">Sideband</a>, <a href="https://github.com/markqvist/NomadNet">NomadNet</a>, or any Reticulum-based app.</p>
+    </div>
+
+    <div class="card">
+      <h2>NomadNet</h2>
+      <p>This node runs NomadNet — connect to browse pages over the Reticulum network.</p>
+      <div class="step" style="margin-top:0.75rem;">
+        <div class="step-num">1</div>
+        <div class="step-body">Install NomadNet:
+          <div class="copy-block"><pre id="nn-install">pip install nomadnet</pre><button class="copy-btn" onclick="copyText('nn-install',this)">copy</button></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">Add the Chicago Offline transport interface (see above)</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">Launch: <code>nomadnet</code> — navigate to this node's pages via the Network section</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>LoRa Radio Parameters</h2>
+      <p>Join the Chicago Offline Reticulum radio network with an <a href="https://unsigned.io/rnode/">RNode</a>:</p>
+      <div class="copy-block">
+        <pre id="lora-params">  Frequency:        914.875 MHz
+  Bandwidth:        125.0 KHz
+  Spreading Factor: 8
+  Coding Rate:      5
+  TX Power:         22 dBm (check your hardware)</pre>
+        <button class="copy-btn" onclick="copyText('lora-params',this)">copy</button>
+      </div>
+      <p style="margin-top:0.75rem;">RNode interface config:</p>
+      <div class="copy-block">
+        <pre id="lora-config">  [[RNode LoRa]]
+    type = RNodeInterface
+    enabled = yes
+    port = /dev/ttyACM0
+    frequency = 914875000
+    bandwidth = 125000
+    txpower = 22
+    spreadingfactor = 8
+    codingrate = 5</pre>
+        <button class="copy-btn" onclick="copyText('lora-config',this)">copy</button>
+      </div>
+      <p style="margin-top:0.75rem;">Compatible hardware: Heltec V3/V4/T114, LilyGO T-Beam/T-LoRa, RAK4631, or any SX1262/SX1276 board with <a href="https://github.com/markqvist/rnode_firmware">RNode firmware</a>. Flash with <code>rnodeconf --autoinstall</code>.</p>
+    </div>
+
+    <div class="card">
+      <h2>What is Reticulum?</h2>
+      <p><a href="https://reticulum.network">Reticulum</a> is a cryptography-based networking stack for resilient, encrypted communications over any medium — LoRa, packet radio, WiFi, serial, TCP/IP, or anything in between. No accounts, no servers required, no metadata leaks.</p>
+    </div>
+
+    <div class="card">
+      <h2>Chicago Offline</h2>
+      <p>We build resilient, off-grid communication infrastructure for Chicagoland. LoRa mesh nodes, MQTT observers, and Reticulum transport — keeping Chicago connected when the grid goes dark.</p>
+      <p style="margin-top:0.5rem;">
+        <a href="https://chicagooffline.com">chicagooffline.com</a> ·
+        <a href="https://scope.chicagooffline.com">CoreScope</a> ·
+        <a href="https://health.chicagooffline.com">Health Check</a> ·
+        <a href="https://map.chioff.com">Live Map</a>
+      </p>
+    </div>
+  </div>
+  <footer>73 de Chicago Offline 📡</footer>
+  <script>
+    function copyText(id,btn){const el=document.getElementById(id);navigator.clipboard.writeText((el.innerText||el.textContent).trim()).then(()=>{const o=btn.textContent;btn.textContent='copied!';setTimeout(()=>btn.textContent=o,1500);});}
+  </script>
+</body>
+</html>
