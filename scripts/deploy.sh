@@ -19,6 +19,6 @@ sudo mkdir -p /srv/rns-landing
 sudo cp rns-landing/index.html /srv/rns-landing/index.html
 
 echo "==> Restarting services"
-sudo systemctl restart rnsd lxmd
+sudo systemctl restart rnsd lxmd nomadnet
 
 echo "Deploy done."

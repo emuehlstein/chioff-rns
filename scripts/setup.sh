@@ -23,8 +23,8 @@ echo "==> Installing systemd units"
 sudo cp systemd/rnsd.service /etc/systemd/system/
 sudo cp systemd/lxmd.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable rnsd lxmd
-sudo systemctl start rnsd lxmd
+sudo systemctl enable rnsd lxmd nomadnet
+sudo systemctl start rnsd lxmd nomadnet
 
 echo "==> Opening firewall port 4242"
 sudo ufw allow 4242/tcp comment "Reticulum TCP"
