@@ -50,11 +50,11 @@ signups, no surveillance, no gatekeepers.
 `Ffff
 All repos at `Ffb3github.com/emuehlstein`Ffff:
 
-`F3f1  >>  `Fffchimesh-mqtt `Ffff— MeshCore infra, MQTT brokers, deploy
-`F3f1  >>  `FffchiOff-rns `Ffff— this Reticulum node
-`F3f1  >>  `FffMeshCore `Ffff— Chicago mesh firmware fork
-`F3f1  >>  `FffCoreScope-chicagooffline `Ffff— packet analyzer
-`F3f1  >>  `Fffmeshcore-health-check `Ffff— coverage testing
+`F3f1  >>  `!`Ffffffchimesh-mqtt`!`Ffff — MeshCore infra, MQTT brokers, deploy
+`F3f1  >>  `!`Ffffffchioff-rns`!`Ffff — this Reticulum node
+`F3f1  >>  `!`FffffffMeshCore`!`Ffff — Chicago mesh firmware fork
+`F3f1  >>  `!`FffffffCoreScope-chicagooffline`!`Ffff — packet analyzer
+`F3f1  >>  `!`Ffffffmeshcore-health-check`!`Ffff — coverage testing
 
 `F0cf
 -
