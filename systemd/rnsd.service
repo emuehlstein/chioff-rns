@@ -1,0 +1,17 @@
+[Unit]
+Description=Reticulum Network Stack Daemon
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=rns
+Group=rns
+ExecStart=/home/rns/.local/bin/rnsd --config /etc/reticulum
+Restart=on-failure
+RestartSec=5s
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

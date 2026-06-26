@@ -1,0 +1,18 @@
+[Unit]
+Description=LXMF Propagation Node Daemon
+After=network.target rnsd.service
+Wants=network.target
+Requires=rnsd.service
+
+[Service]
+Type=simple
+User=rns
+Group=rns
+ExecStart=/home/rns/.local/bin/lxmd --config /etc/reticulum
+Restart=on-failure
+RestartSec=5s
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
