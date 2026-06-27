@@ -31,12 +31,12 @@ This Reticulum node provides:
 >Navigate
 
 `Ffff
-`F0cf`[Connect`/page/connect.mu]`Ffff           How to join the network
-`F0cf`[Services`/page/services.mu]`Ffff          What we run
-`F0cf`[Node Status`/page/status.mu]`Ffff         Live node health
-`F0cf`[Relay Chat`/page/rrcd.mu]`Ffff            Live chat rooms
-`F0cf`[Mesh Network`/page/mesh.mu]`Ffff          LoRa nodes and radio info
-`F0cf`[About`/page/about.mu]`Ffff                The project and the people
+`F0cf`[Connect`9f2985319b6785103ebf227efbb2abc4:/page/connect.mu]`Ffff           How to join the network
+`F0cf`[Services`9f2985319b6785103ebf227efbb2abc4:/page/services.mu]`Ffff          What we run
+`F0cf`[Node Status`9f2985319b6785103ebf227efbb2abc4:/page/status.mu]`Ffff         Live node health
+`F0cf`[Relay Chat`9f2985319b6785103ebf227efbb2abc4:/page/rrcd.mu]`Ffff            Live chat rooms
+`F0cf`[Mesh Network`9f2985319b6785103ebf227efbb2abc4:/page/mesh.mu]`Ffff          LoRa nodes and radio info
+`F0cf`[About`9f2985319b6785103ebf227efbb2abc4:/page/about.mu]`Ffff                The project and the people
 
 `F555
 -
