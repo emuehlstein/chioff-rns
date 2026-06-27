@@ -1,0 +1,53 @@
+# chioff-rns status generator configuration
+# Copy to /etc/chioff-status.config and edit as needed.
+# All values shown are the built-in defaults.
+
+[general]
+# In public mode peer IPs are truncated (203.0.x.x) and hashes are shortened.
+# Set to false ONLY for a locally-served operator view with full detail.
+public_mode = true
+
+# Leave blank to use the system hostname.
+node_hostname =
+public_address = rns.chicagooffline.com
+public_port = 4242
+
+# Reticulum config directory passed to rnstatus / rnpath.
+rns_config = /etc/reticulum
+rnstatus_cmd = rnstatus
+rnpath_cmd = rnpath
+command_timeout = 15
+
+[services]
+# label = systemd unit. Order is preserved on the page.
+rnsd = rnsd.service
+lxmd = lxmd.service
+nomadnet = nomadnet.service
+
+[paths]
+json_output = /var/lib/chicagooffline-rns/status.json
+page_output = /home/rns/.nomadnetwork/storage/pages/status.mu
+disk_path = /
+
+[history]
+enabled = true
+db = /var/lib/chicagooffline-rns/history.db
+retention_hours = 168
+
+[announces]
+window_minutes = 15
+spike_threshold = 20
+
+[events]
+lookback_hours = 2
+display_limit = 12
+
+[chicago]
+blurb = rns.chicagooffline.com is the always-on public Reticulum transport node
+    for Chicago Offline. It routes traffic for the Chicagoland mesh, propagates
+    LXMF mail, and serves these NomadNet pages.
+# One item per line.
+local_services =
+    NomadNet pages (index.mu)
+    LXMF propagation (store & forward)
+    Reticulum Relay Chat (rrcd.mu)

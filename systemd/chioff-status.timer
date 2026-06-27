@@ -1,0 +1,13 @@
+[Unit]
+Description=Regenerate Chicago Offline RNS status page every minute
+After=network.target
+
+[Timer]
+# First run shortly after boot, then every minute.
+OnBootSec=30s
+OnUnitActiveSec=60s
+AccuracySec=5s
+Unit=chioff-status.service
+
+[Install]
+WantedBy=timers.target

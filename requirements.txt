@@ -1,0 +1,4 @@
+# Runtime dependency for the status page generator.
+# The collection layer (status/collectors.py) uses only the standard library;
+# Jinja2 is needed only for rendering the NomadNet .mu page.
+jinja2>=3.0

@@ -11,7 +11,10 @@ echo "==> Creating rns user"
 sudo useradd -m -s /bin/bash rns || true
 
 echo "==> Installing RNS, LXMF, NomadNet as rns user"
-sudo -u rns pip3 install --user rns lxmf nomadnet
+sudo -u rns pip3 install --user rns lxmf nomadnet jinja2
+
+echo "==> Allowing rns to read service logs (journalctl)"
+sudo usermod -aG systemd-journal rns || true
 
 echo "==> Deploying reticulum config"
 sudo mkdir -p /etc/reticulum
@@ -19,11 +22,24 @@ sudo cp reticulum/config/reticulum.config /etc/reticulum/config
 sudo cp reticulum/config/nomadnet.config /etc/reticulum/nomadnetconfig
 sudo chown -R rns:rns /etc/reticulum
 
+echo "==> Setting up status generator"
+sudo mkdir -p /var/lib/chicagooffline-rns
+sudo chown -R rns:rns /var/lib/chicagooffline-rns
+sudo mkdir -p /home/rns/.nomadnetwork/storage/pages
+sudo chown -R rns:rns /home/rns/.nomadnetwork
+if [ ! -f /etc/chioff-status.config ]; then
+  sudo cp status.config.example /etc/chioff-status.config
+fi
+
 echo "==> Installing systemd units"
 sudo cp systemd/rnsd.service /etc/systemd/system/
 sudo cp systemd/lxmd.service /etc/systemd/system/
+sudo cp systemd/nomadnet.service /etc/systemd/system/
+sudo cp systemd/chioff-status.service /etc/systemd/system/
+sudo cp systemd/chioff-status.timer /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable rnsd lxmd nomadnet
+sudo systemctl enable --now chioff-status.timer
 sudo systemctl start rnsd lxmd nomadnet
 
 echo "==> Opening firewall port 4242"

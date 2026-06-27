@@ -1,0 +1,18 @@
+[Unit]
+Description=Chicago Offline RNS status page generator
+After=network.target rnsd.service
+Wants=rnsd.service
+
+[Service]
+Type=oneshot
+User=rns
+Group=rns
+Environment=PATH=/home/rns/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=HOME=/home/rns
+Environment=CHIOFF_STATUS_CONFIG=/etc/chioff-status.config
+WorkingDirectory=/opt/chioff-rns
+ExecStart=/usr/bin/python3 -m status.generate --config /etc/chioff-status.config
+# Read-only journald access for rnsd log parsing comes from the rns user being
+# in the systemd-journal group (configured in setup.sh).
+StandardOutput=journal
+StandardError=journal
