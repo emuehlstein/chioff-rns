@@ -85,22 +85,6 @@
 {{ C_HEAD }}
 -
 
->Peer Attribution
-
-{{ C_BODY }}
-{% if s.peer_attribution.instrumented and s.peer_attribution.peers %}
-{% for peer in s.peer_attribution.peers %}
-{{ C_HL }}{{ peer.id }}{{ C_BODY }}  {{ peer.destinations }} destinations
-{% endfor %}
-{% else %}
-{{ C_WARN }}Not yet instrumented.{{ C_BODY }}
-
-`F888{{ s.peer_attribution.note }}{{ C_BODY }}
-{% endif %}
-
-{{ C_HEAD }}
--
-
 >Recent Events
 
 {{ C_BODY }}
