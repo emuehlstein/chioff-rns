@@ -77,4 +77,4 @@ Flash RNode firmware with: `!rnodeconf --autoinstall`!
 
 `F555
 -
-`c`[`F0cf<< Back to Home`:/page/index.mu]
+`c`[`F0cf<< Back to Home`/page/index.mu]
