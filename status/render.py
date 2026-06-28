@@ -25,6 +25,7 @@ C_WARN = "`Ffa0"   # amber
 C_BAD = "`Ff00"    # red
 
 TEMPLATE_NAME = "status.mu.j2"
+NODES_TEMPLATE_NAME = "nodes.mu.j2"
 
 
 def _dot(state: str) -> str:
@@ -129,13 +130,29 @@ def render_page(snapshot: Dict[str, Any], config) -> str:
     )
 
 
-def write_page(snapshot: Dict[str, Any], config) -> str:
-    """Render and atomically write the .mu page. Returns the rendered text."""
-    text = render_page(snapshot, config)
-    out_path = config.page_output
-    os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
-    tmp_path = f"{out_path}.tmp"
+def render_nodes_page(snapshot: Dict[str, Any], config) -> str:
+    """Render the full node list page."""
+    env = _build_environment()
+    template = env.get_template(NODES_TEMPLATE_NAME)
+    return template.render(s=snapshot, cfg=config)
+
+
+def _atomic_write(path: str, text: str) -> None:
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    tmp_path = f"{path}.tmp"
     with open(tmp_path, "w", encoding="utf-8") as handle:
         handle.write(text)
-    os.replace(tmp_path, out_path)
+    os.replace(tmp_path, path)
+
+
+def write_page(snapshot: Dict[str, Any], config) -> str:
+    """Render and atomically write status.mu and nodes.mu. Returns status page text."""
+    text = render_page(snapshot, config)
+    _atomic_write(config.page_output, text)
+
+    # Write the tertiary node list page alongside status.mu.
+    nodes_text = render_nodes_page(snapshot, config)
+    nodes_path = os.path.join(os.path.dirname(config.page_output), "nodes.mu")
+    _atomic_write(nodes_path, nodes_text)
+
     return text
