@@ -34,6 +34,7 @@
 {% endif %}
 {% if sys.memory %}
 {{ C_DIM }}Memory    {{ C_BODY }}{{ sys.memory.used|hb }} / {{ sys.memory.total|hb }}{% if sys.memory.percent is not none %}  {% if sys.memory.percent >= 90 %}{{ C_BAD }}{% elif sys.memory.percent >= 75 %}{{ C_WARN }}{% else %}{{ C_GOOD }}{% endif %}{{ sys.memory.percent }}%{{ C_BODY }}{% endif %}
+
 {% endif %}
 {% if sys.disk %}
 {{ C_DIM }}Disk      {{ C_BODY }}{{ sys.disk.used|hb }} / {{ sys.disk.total|hb }}{% if sys.disk.percent is not none %}  {% if sys.disk.percent >= 90 %}{{ C_BAD }}{% elif sys.disk.percent >= 75 %}{{ C_WARN }}{% else %}{{ C_GOOD }}{% endif %}{{ sys.disk.percent }}%{{ C_BODY }}{% endif %}
