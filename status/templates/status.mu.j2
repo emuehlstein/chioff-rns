@@ -89,20 +89,44 @@
 
 {{ C_BODY }}
 {% if s.path_table.available and s.path_table.entries %}
-{% set local_entries = s.path_table.entries | selectattr('hops', 'equalto', 0) | list %}
-{% set remote_entries = s.path_table.entries | selectattr('hops', 'greaterthan', 0) | list | sort(attribute='hops') %}
-{% if local_entries %}
-`F888Local (0 hops){{ C_BODY }}
-{% for e in local_entries %}
-  {{ C_HL }}{{ e.destination }}{{ C_BODY }}  `F888{{ e.interface | truncate(40, true, '…') }}{{ C_BODY }}
+{% set hop0 = s.path_table.entries | selectattr('hops', 'equalto', 0) | list %}
+{% set hop1 = s.path_table.entries | selectattr('hops', 'equalto', 1) | list %}
+{% set hop2 = s.path_table.entries | selectattr('hops', 'equalto', 2) | list %}
+{% set hop3plus = s.path_table.entries | selectattr('hops', 'greaterthan', 2) | list | sort(attribute='hops') %}
+{% if hop0 %}
+`F888This node (0 hops){{ C_BODY }}
+{% for e in hop0 %}
+  {{ C_GOOD }}●{{ C_BODY }} {{ C_HL }}{{ e.name if e.name else e.destination }}{{ C_BODY }}{% if e.name %}  `F888{{ e.destination }}{% endif %}{{ C_BODY }}
 {% endfor %}
 
 {% endif %}
-{% if remote_entries %}
-`F888Remote{{ C_BODY }}
-{% for e in remote_entries %}
-  {{ C_HL }}{{ e.destination }}{{ C_BODY }}  `F888{{ e.hops }}h via {{ e.via }}{{ C_BODY }}
+{% if hop1 %}
+`F888Direct peers (1 hop){{ C_BODY }}
+{% for e in hop1 %}
+  {{ C_GOOD }}●{{ C_BODY }} {{ C_HL }}{{ e.name if e.name else e.destination }}{{ C_BODY }}{% if e.name %}  `F888{{ e.destination }}{% endif %}{{ C_BODY }}
 {% endfor %}
+
+{% endif %}
+{% if hop2 %}
+`F888Near (2 hops){{ C_BODY }}
+{% for e in hop2 %}
+  `Ffa0●{{ C_BODY }} {{ C_HL }}{{ e.name if e.name else e.destination }}{{ C_BODY }}{% if e.name %}  `F888{{ e.destination }}{% endif %}{{ C_BODY }}
+{% endfor %}
+
+{% endif %}
+{% if hop3plus %}
+`F888Distant (3+ hops) — {{ hop3plus | length }} destinations{{ C_BODY }}
+{% set named = hop3plus | selectattr('name') | list %}
+{% for e in named[:10] %}
+  `F555●{{ C_BODY }} {{ C_HL }}{{ e.name }}{{ C_BODY }}  `F888{{ e.hops }}h{{ C_BODY }}
+{% endfor %}
+{% if named | length > 10 %}
+  `F888… and {{ named | length - 10 }} more named{{ C_BODY }}
+{% endif %}
+{% set unnamed_count = hop3plus | length - named | length %}
+{% if unnamed_count > 0 %}
+  `F888+ {{ unnamed_count }} unnamed destinations{{ C_BODY }}
+{% endif %}
 {% endif %}
 {% elif s.path_table.available %}
 `F888Path table is empty.{{ C_BODY }}

@@ -315,12 +315,15 @@ def collect_paths(config: Config, errors: List[str]) -> Dict[str, Any]:
                 hashes.append(mh.group(1))
             continue
         dest_hash = m.group(1)
+        via_hash = m.group(3)
         hashes.append(dest_hash)
         entries.append(
             {
                 "destination": anonymize_hash(dest_hash, config.public_mode),
+                "destination_full": dest_hash,
                 "hops": int(m.group(2)),
-                "via": anonymize_hash(m.group(3), config.public_mode),
+                "via": anonymize_hash(via_hash, config.public_mode),
+                "via_full": via_hash,
                 "interface": (m.group(4) or "").strip(),
             }
         )
@@ -496,6 +499,102 @@ def _redact_log_line(line: str, config: Config) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Announce name map  (reads RNS known_destinations storage file)
+# ---------------------------------------------------------------------------
+
+
+def collect_names(config: Config, errors: List[str]) -> Dict[str, str]:
+    """Return a {full_hex_hash: display_name} map scraped from the RNS
+    known_destinations storage file without importing RNS.
+
+    The file is a msgpack list of entries; each entry is a list whose
+    element [3] is raw app_data bytes.  Names are extracted by scanning
+    for the longest printable ASCII run — this is intentionally loose so
+    it works across Sideband, NomadNet, Inertia, and custom firmwares.
+    """
+    storage_dir = config.rns_config  # e.g. /etc/reticulum
+    kd_path = os.path.join(storage_dir, "storage", "known_destinations")
+    if not os.path.isfile(kd_path):
+        errors.append("names: known_destinations file not found")
+        return {}
+
+    try:
+        # Use the bundled umsgpack via a tiny subprocess so we don't need
+        # to import RNS (which would start a second transport instance).
+        script = r"""
+import sys, os, re
+rns_site = None
+for p in sys.path:
+    if os.path.isfile(os.path.join(p, 'RNS', 'vendor', 'umsgpack.py')):
+        rns_site = p
+        break
+if not rns_site:
+    sys.exit(1)
+sys.path.insert(0, rns_site)
+import RNS.vendor.umsgpack as mp
+
+kd_path = sys.argv[1]
+with open(kd_path, 'rb') as fh:
+    raw = fh.read()
+try:
+    data = mp.unpackb(raw)
+except Exception:
+    sys.exit(0)
+
+results = {}
+if isinstance(data, dict):
+    items = data.items()
+elif isinstance(data, list):
+    items = [(e[0], e[1:]) for e in data if isinstance(e, (list, tuple)) and len(e) >= 2]
+else:
+    sys.exit(0)
+
+for k, v in items:
+    try:
+        h = k.hex() if isinstance(k, bytes) else str(k)
+        entry = v if isinstance(v, (list, tuple)) else [v]
+        app_data = entry[3] if len(entry) > 3 else None
+        if not app_data or not isinstance(app_data, bytes):
+            continue
+        # Plain UTF-8 first
+        try:
+            candidate = app_data.decode('utf-8').strip()
+            if 2 <= len(candidate) <= 60 and all(32 <= ord(c) < 127 for c in candidate):
+                results[h] = candidate
+                continue
+        except Exception:
+            pass
+        # Longest printable ASCII run
+        runs = re.findall(b'[ -~]{4,}', app_data)
+        if runs:
+            best = max(runs, key=len).decode('ascii').strip()
+            if 4 <= len(best) <= 60:
+                results[h] = best
+    except Exception:
+        pass
+
+for h, n in results.items():
+    sys.stdout.write(h + '\t' + n + '\n')
+"""
+        rc, out, err = run(
+            ["python3", "-c", script, kd_path],
+            timeout=config.command_timeout,
+        )
+        if rc != 0:
+            errors.append(f"names: scraper rc={rc}")
+            return {}
+        names: Dict[str, str] = {}
+        for line in out.splitlines():
+            parts = line.split("\t", 1)
+            if len(parts) == 2:
+                names[parts[0].lower()] = parts[1]
+        return names
+    except Exception as exc:
+        errors.append(f"names: {exc}")
+        return {}
+
+
+# ---------------------------------------------------------------------------
 # Snapshot assembly
 # ---------------------------------------------------------------------------
 
@@ -523,6 +622,7 @@ def collect_snapshot(config: Config) -> Dict[str, Any]:
     system = collect_system(config, errors)
     rnstatus = collect_rnstatus(config, errors)
     paths = collect_paths(config, errors)
+    names = collect_names(config, errors)
     tcp = collect_tcp_peers(config, errors)
     journal = collect_journal(config, errors)
 
@@ -570,7 +670,10 @@ def collect_snapshot(config: Config) -> Dict[str, Any]:
         "path_table": {
             "available": paths.get("available", False),
             "count": paths.get("count", 0),
-            "entries": paths.get("entries", [])[:25],
+            "entries": [
+                dict(e, name=names.get(e.get("destination_full", "").lower()))
+                for e in paths.get("entries", [])[:50]
+            ],
             "hashes": paths.get("hashes", []),
         },
         "peer_attribution": {
