@@ -14,6 +14,7 @@ public_port = 4242
 
 # Reticulum config directory passed to rnstatus / rnpath.
 rns_config = /etc/reticulum
+# If rns tools are installed under a specific user (e.g. ~/.local/bin), use the full path.
 rnstatus_cmd = rnstatus
 rnpath_cmd = rnpath
 command_timeout = 15

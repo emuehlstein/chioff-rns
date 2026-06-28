@@ -85,6 +85,34 @@
 {{ C_HEAD }}
 -
 
+>Path Table
+
+{{ C_BODY }}
+{% if s.path_table.available and s.path_table.entries %}
+{% set local_entries = s.path_table.entries | selectattr('hops', 'equalto', 0) | list %}
+{% set remote_entries = s.path_table.entries | selectattr('hops', 'greaterthan', 0) | list | sort(attribute='hops') %}
+{% if local_entries %}
+`F888Local (0 hops){{ C_BODY }}
+{% for e in local_entries %}
+  {{ C_HL }}{{ e.destination }}{{ C_BODY }}  `F888{{ e.interface | truncate(40, true, '…') }}{{ C_BODY }}
+{% endfor %}
+
+{% endif %}
+{% if remote_entries %}
+`F888Remote{{ C_BODY }}
+{% for e in remote_entries %}
+  {{ C_HL }}{{ e.destination }}{{ C_BODY }}  `F888{{ e.hops }}h via {{ e.via }}{{ C_BODY }}
+{% endfor %}
+{% endif %}
+{% elif s.path_table.available %}
+`F888Path table is empty.{{ C_BODY }}
+{% else %}
+`F888rnpath not available — set rnpath_cmd in config.{{ C_BODY }}
+{% endif %}
+
+{{ C_HEAD }}
+-
+
 >Recent Events
 
 {{ C_BODY }}

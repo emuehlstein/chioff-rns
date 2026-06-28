@@ -301,14 +301,16 @@ def collect_paths(config: Config, errors: List[str]) -> Dict[str, Any]:
         line = line.strip()
         if not line:
             continue
-        # Typical: "<dest_hash> is <n> hops away via <transport_hash> on <iface>"
+        # rnpath emits: "<dest_hash> is <n> hops away via <via_hash> on <iface> expires ..."
+        # Strip optional angle-bracket wrapping around hashes.
+        line_stripped = re.sub(r"<([0-9a-fA-F]+)>", r"\1", line)
         m = re.match(
-            r"^([0-9a-fA-F]+)\s+is\s+(\d+)\s+hops?\s+away\s+via\s+([0-9a-fA-F]+)(?:\s+on\s+(.*))?$",
-            line,
+            r"^([0-9a-fA-F]+)\s+is\s+(\d+)\s+hops?\s+away\s+via\s+([0-9a-fA-F]+)(?:\s+on\s+(.*?))?(?:\s+expires\s+.*)?$",
+            line_stripped,
         )
         if not m:
             # Fallback: capture any leading hash so counts stay meaningful.
-            mh = re.match(r"^([0-9a-fA-F]{8,})", line)
+            mh = re.match(r"^<?([0-9a-fA-F]{8,})>?", line)
             if mh:
                 hashes.append(mh.group(1))
             continue
