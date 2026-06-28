@@ -4,10 +4,8 @@
 ▙▖▌▌▌▙▖█▌▙▌▙▌  ▙▌▐ ▐ ▐▖▌▌▌▙▖
          ▄▌
 
-`c`Ffb3`*Resilient communications for Chicagoland`*
-
-`a`Ffff
-
+`Ffb3`*Resilient communications for Chicagoland`*
+`Ffff
 When the grid goes dark, we keep Chicago connected.
 
 Chicago Offline builds off-grid communication infrastructure
