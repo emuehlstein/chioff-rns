@@ -286,15 +286,72 @@ def _parse_interface_block(header: str, body: List[str], config: Config) -> Opti
 
 
 def collect_paths(config: Config, errors: List[str]) -> Dict[str, Any]:
-    """Parse the rnpath path table. Best-effort across rnpath versions."""
-    cmd = [config.rnpath_cmd, "--table"]
+    """Parse the rnpath path table using JSON output (-j flag).
+
+    Falls back to text parsing if JSON output is unavailable (older rnpath).
+    """
+    # Try JSON output first — faster and more reliable.
+    cmd_json = [config.rnpath_cmd, "--table", "-j"]
     if config.rns_config:
-        cmd += ["--config", config.rns_config]
-    rc, out, err = run(cmd, timeout=config.command_timeout)
+        cmd_json += ["--config", config.rns_config]
+    rc, out, err = run(cmd_json, timeout=config.command_timeout)
+    if rc == 0 and out.strip():
+        return _parse_rnpath_json(out, config, errors)
+
+    # Fallback: text parsing for older rnpath versions.
+    cmd_text = [config.rnpath_cmd, "--table"]
+    if config.rns_config:
+        cmd_text += ["--config", config.rns_config]
+    rc, out, err = run(cmd_text, timeout=config.command_timeout)
     if rc != 0 or not out.strip():
         errors.append(f"rnpath: rc={rc} {err.strip() or 'no output'}")
         return {"available": False, "count": 0, "entries": [], "hashes": []}
+    return _parse_rnpath_text(out, config)
 
+
+def _parse_rnpath_json(out: str, config: Config, errors: List[str]) -> Dict[str, Any]:
+    """Parse rnpath JSON output (rnpath --table -j)."""
+    import json as _json
+    try:
+        raw = _json.loads(out)
+    except Exception as exc:
+        errors.append(f"rnpath json parse: {exc}")
+        return {"available": False, "count": 0, "entries": [], "hashes": []}
+
+    entries: List[Dict[str, Any]] = []
+    hashes: List[str] = []
+    for item in raw:
+        try:
+            dest_hash = item.get("hash", "")
+            via_hash = item.get("via", "")
+            hops = int(item.get("hops", 0))
+            iface = item.get("interface", "")
+            hashes.append(dest_hash)
+            entries.append(
+                {
+                    "destination": anonymize_hash(dest_hash, config.public_mode),
+                    "destination_full": dest_hash,
+                    "hops": hops,
+                    "via": anonymize_hash(via_hash, config.public_mode),
+                    "via_full": via_hash,
+                    "interface": iface,
+                }
+            )
+        except Exception:
+            continue
+
+    transport_peers = len({e["via"] for e in entries if e.get("via")})
+    return {
+        "available": True,
+        "count": len(hashes),
+        "entries": entries,
+        "hashes": hashes,
+        "transport_peers": transport_peers,
+    }
+
+
+def _parse_rnpath_text(out: str, config: Config) -> Dict[str, Any]:
+    """Parse rnpath plain-text output (fallback for older rnpath versions)."""
     entries: List[Dict[str, Any]] = []
     hashes: List[str] = []
     for line in out.splitlines():
@@ -672,7 +729,7 @@ def collect_snapshot(config: Config) -> Dict[str, Any]:
             "count": paths.get("count", 0),
             "entries": [
                 dict(e, name=names.get(e.get("destination_full", "").lower()))
-                for e in paths.get("entries", [])[:50]
+                for e in paths.get("entries", [])
             ],
             "hashes": paths.get("hashes", []),
         },

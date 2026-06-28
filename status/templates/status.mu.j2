@@ -117,13 +117,13 @@
 {% if hop3plus %}
 `F888Distant (3+ hops) — {{ hop3plus | length }} destinations{{ C_BODY }}
 {% set named = hop3plus | selectattr('name') | list %}
-{% for e in named[:10] %}
-  `F555●{{ C_BODY }} {{ C_HL }}{{ e.name }}{{ C_BODY }}  `F888{{ e.hops }}h{{ C_BODY }}
-{% endfor %}
-{% if named | length > 10 %}
-  `F888… and {{ named | length - 10 }} more named{{ C_BODY }}
-{% endif %}
 {% set unnamed_count = hop3plus | length - named | length %}
+{% for hop_val, group in named | groupby('hops') %}
+  `F888{{ hop_val }} hop{{ 's' if hop_val != 1 else '' }}:{{ C_BODY }}
+{% for e in group %}
+  `F555●{{ C_BODY }} {{ C_HL }}{{ e.name }}{{ C_BODY }}  `F888{{ e.destination }}{{ C_BODY }}
+{% endfor %}
+{% endfor %}
 {% if unnamed_count > 0 %}
   `F888+ {{ unnamed_count }} unnamed destinations{{ C_BODY }}
 {% endif %}
