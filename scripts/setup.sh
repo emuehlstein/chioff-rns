@@ -11,7 +11,9 @@ echo "==> Creating rns user"
 sudo useradd -m -s /bin/bash rns || true
 
 echo "==> Installing RNS, LXMF, NomadNet as rns user"
-sudo -u rns pip3 install --user rns lxmf nomadnet jinja2
+# Consider pinning these to known-good versions for reproducible nodes, e.g.
+# rns==x.y.z lxmf==x.y.z nomadnet==x.y.z (jinja2 is pinned in requirements.txt).
+sudo -u rns pip3 install --user rns lxmf nomadnet jinja2==3.1.6
 
 echo "==> Allowing rns to read service logs (journalctl)"
 sudo usermod -aG systemd-journal rns || true

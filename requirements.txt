@@ -1,4 +1,8 @@
 # Runtime dependency for the status page generator.
 # The collection layer (status/collectors.py) uses only the standard library;
 # Jinja2 is needed only for rendering the NomadNet .mu page.
-jinja2>=3.0
+#
+# Pinned to an exact version for reproducible, supply-chain-safe deploys.
+# For full integrity verification, generate a hashed lockfile with pip-tools
+# (`pip-compile --generate-hashes`) and deploy with `pip install --require-hashes`.
+jinja2==3.1.6

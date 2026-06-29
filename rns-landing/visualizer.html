@@ -172,8 +172,18 @@
 
     function showInfo(n) {
       const el = document.getElementById('info');
-      const t = { self: 'transport node', peer: 'transport peer', dest: 'destination', iface: 'interface' }[n.type];
-      el.innerHTML = '<h2>' + (n.label || n.id) + '</h2><div><span class="k">type:</span> ' + t + '</div>';
+      const t = { self: 'transport node', peer: 'transport peer', dest: 'destination', iface: 'interface' }[n.type] || 'node';
+      // Build with DOM APIs / textContent so untrusted node labels (e.g.
+      // names scraped from announce app_data) can never inject markup.
+      el.replaceChildren();
+      const h2 = document.createElement('h2');
+      h2.textContent = n.label || n.id;
+      const div = document.createElement('div');
+      const k = document.createElement('span');
+      k.className = 'k';
+      k.textContent = 'type:';
+      div.append(k, ' ' + t);
+      el.append(h2, div);
       el.style.display = 'block';
     }
 

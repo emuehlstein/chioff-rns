@@ -547,6 +547,7 @@ def _parse_journal_timestamp(line: str) -> Optional[_dt.datetime]:
 
 
 _IP_RE = re.compile(r"\b\d{1,3}(?:\.\d{1,3}){3}\b")
+_IPV6_RE = re.compile(r"\b(?:[0-9a-fA-F]{1,4}:){2,7}[0-9a-fA-F]{1,4}\b")
 _HASH_IN_LINE_RE = re.compile(r"\b[0-9a-fA-F]{16,}\b")
 
 
@@ -559,6 +560,7 @@ def _redact_log_line(line: str, config: Config) -> str:
         msg = parts[3].strip()
     msg = msg.strip()
     if config.public_mode:
+        msg = _IPV6_RE.sub(lambda m: anonymize_ip(m.group(0), True), msg)
         msg = _IP_RE.sub(lambda m: anonymize_ip(m.group(0), True), msg)
         msg = _HASH_IN_LINE_RE.sub(lambda m: anonymize_hash(m.group(0), True), msg)
     return msg[:160]
