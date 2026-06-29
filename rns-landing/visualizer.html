@@ -22,6 +22,10 @@
     #legend { top:0.75rem; left:0.75rem; }
     #legend .row { display:flex; align-items:center; gap:0.5rem; margin:0.15rem 0; }
     #legend .dot { width:0.7rem; height:0.7rem; border-radius:50%; flex-shrink:0; }
+    #controls { bottom:0.75rem; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:0.6rem; }
+    #controls label { color:var(--amber); }
+    #controls input[type=range] { width:160px; accent-color:var(--cyan); }
+    #hops-val { color:var(--text-bright); }
     #stats { top:0.75rem; right:0.75rem; min-width:160px; }
     #stats .val { color:var(--text-bright); }
     #stats h2 { color:var(--green); font-size:0.85rem; margin-bottom:0.4rem; }
@@ -41,6 +45,10 @@
   </header>
   <div id="wrap">
     <canvas id="net"></canvas>
+    <div id="controls" class="panel">
+      <label for="hops">max hops: <span id="hops-val">3</span></label>
+      <input id="hops" type="range" min="0" max="10" value="3" step="1">
+    </div>
     <div id="legend" class="panel">
       <div class="row"><span class="dot" style="background:var(--cyan)"></span> Transport node (us)</div>
       <div class="row"><span class="dot" style="background:var(--green)"></span> Transport peer (via)</div>
@@ -66,6 +74,7 @@
     const RADIUS = { self: 16, peer: 9, dest: 6, iface: 7 };
     let nodes = [], links = [], view = { x: 0, y: 0, k: 1 };
     let dragNode = null, panning = false, last = { x: 0, y: 0 }, selected = null;
+    let maxHops = 3, lastSnap = null;
 
     function resize() {
       const r = canvas.getBoundingClientRect();
@@ -85,7 +94,7 @@
       const self = node('self', 'self', snap.node && snap.node.public_address || 'this node');
       const ifaces = (snap.interfaces || []).filter(i => i.online);
       ifaces.forEach(i => { node('iface:' + i.name, 'iface', i.name); L.push({ a: 'self', b: 'iface:' + i.name }); });
-      const entries = (snap.path_table && snap.path_table.entries) || [];
+      const entries = ((snap.path_table && snap.path_table.entries) || []).filter(e => (e.hops || 0) <= maxHops);
       entries.forEach(e => {
         const via = node('via:' + e.via, 'peer', e.via_label || e.via); via.named = !!e.via_label;
         L.push({ a: 'self', b: via.id });
@@ -93,46 +102,55 @@
         const d = node(did, 'dest', e.destination_label || e.destination); d.named = !!e.destination_label;
         L.push({ a: via.id, b: did, hops: e.hops });
       });
-      nodes = [...N.values()]; links = L;
+      nodes = [...N.values()]; nodeMap = N;
+      links = L.map(l => ({ a: N.get(l.a), b: N.get(l.b), hops: l.hops })).filter(l => l.a && l.b);
+      for (let i = 0; i < 400; i++) step();
+      view = { x: 0, y: 0, k: 1 };
       document.getElementById('s-nodes').textContent = nodes.length;
-      document.getElementById('s-paths').textContent = (snap.network && snap.network.paths) ?? entries.length;
+      document.getElementById('s-paths').textContent = entries.length;
       document.getElementById('s-peers').textContent = (snap.network && snap.network.transport_peers) ?? '–';
       document.getElementById('s-updated').textContent = snap.generated_at ? new Date(snap.generated_at).toLocaleTimeString() : '–';
     }
 
+    let nodeMap = new Map();
+    const byId = id => nodeMap.get(id);
+
     function step() {
       const cx = canvas.clientWidth / 2, cy = canvas.clientHeight / 2;
-      for (const n of nodes) for (const m of nodes) {
-        if (n === m) continue;
-        let dx = n.x - m.x, dy = n.y - m.y, d = Math.hypot(dx, dy) || 0.01;
-        const f = 2500 / (d * d); n.vx += dx / d * f; n.vy += dy / d * f;
+      const rep = nodes.length > 200 ? 600 : 2500;
+      for (let i = 0; i < nodes.length; i++) for (let j = i + 1; j < nodes.length; j++) {
+        const n = nodes[i], m = nodes[j];
+        let dx = n.x - m.x, dy = n.y - m.y, d2 = dx * dx + dy * dy; if (d2 > 90000) continue;
+        const d = Math.sqrt(d2) || 0.01, f = rep / d2; const fx = dx / d * f, fy = dy / d * f;
+        n.vx += fx; n.vy += fy; m.vx -= fx; m.vy -= fy;
       }
       for (const l of links) {
-        const a = byId(l.a), b = byId(l.b); if (!a || !b) continue;
-        let dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 0.01, f = (d - 90) * 0.02;
+        const a = l.a, b = l.b; if (!a || !b) continue;
+        let dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 0.01, f = (d - 70) * 0.03;
         a.vx += dx / d * f; a.vy += dy / d * f; b.vx -= dx / d * f; b.vy -= dy / d * f;
       }
       for (const n of nodes) {
-        n.vx += (cx - n.x) * 0.001; n.vy += (cy - n.y) * 0.001;
+        n.vx += (cx - n.x) * 0.01; n.vy += (cy - n.y) * 0.01;
         if (n === dragNode) continue;
-        n.vx *= 0.85; n.vy *= 0.85; n.x += n.vx; n.y += n.vy;
+        n.vx *= 0.82; n.vy *= 0.82;
+        const sp = Math.hypot(n.vx, n.vy); if (sp > 30) { n.vx = n.vx / sp * 30; n.vy = n.vy / sp * 30; }
+        n.x += n.vx; n.y += n.vy;
       }
     }
-    const byId = id => nodes.find(n => n.id === id);
 
     function draw() {
       ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
       ctx.save(); ctx.translate(view.x, view.y); ctx.scale(view.k, view.k);
       ctx.lineWidth = 1;
       for (const l of links) {
-        const a = byId(l.a), b = byId(l.b); if (!a || !b) continue;
+        const a = l.a, b = l.b; if (!a || !b) continue;
         ctx.strokeStyle = 'rgba(0,229,255,0.18)'; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
       }
       for (const n of nodes) {
         const r = RADIUS[n.type] || 6;
         ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, 6.283); ctx.fillStyle = COLORS[n.type]; ctx.fill();
         if (n === selected) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke(); }
-        if (n.type === 'self' || n.named || n === selected) {
+        if (n.type === 'self' || n === selected || (n.named && (nodes.length < 60 || view.k > 1.8))) {
           ctx.fillStyle = '#e8ecf0'; ctx.font = '11px Courier New';
           ctx.fillText(n.label || n.id, n.x + r + 3, n.y + 3);
         }
@@ -158,9 +176,14 @@
     function load() {
       fetch('status.json', { cache: 'no-store' }).then(r => r.json()).then(s => {
         document.getElementById('status-msg').style.display = 'none';
-        buildGraph(s);
+        lastSnap = s; buildGraph(s);
       }).catch(() => { document.getElementById('status-msg').textContent = 'status.json unavailable'; });
     }
+    const hopsEl = document.getElementById('hops');
+    hopsEl.addEventListener('input', () => {
+      maxHops = +hopsEl.value; document.getElementById('hops-val').textContent = maxHops;
+      if (lastSnap) buildGraph(lastSnap);
+    });
     load(); setInterval(load, 60000); loop();
   })();
   </script>
