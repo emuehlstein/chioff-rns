@@ -43,7 +43,9 @@ Secrets needed in repo: `RNS_SSH_HOST`, `RNS_SSH_KEY`.
 ## Status page
 
 A periodically generated NomadNet page reports live node health at
-`/page/status.mu` (linked from the home page).
+`/page/status.mu` (linked from the home page). The web landing page also hosts
+a **Network Visualizer** (`visualizer.html`) — a force-directed graph of the
+node, its transport peers, and learned destinations, fed by `status.json`.
 
 - **Collector** — `status/collectors.py` gathers data from `rnstatus`,
   `rnpath --table`, `journalctl -u rnsd`, `systemctl`, `ss` (TCP port 4242),
@@ -57,6 +59,7 @@ A periodically generated NomadNet page reports live node health at
 - **Outputs** —
   - page: `/home/rns/.nomadnetwork/storage/pages/status.mu`
   - JSON: `/var/lib/chicagooffline-rns/status.json`
+  - web: `/srv/rns-landing/status.json` (symlink, feeds the Network Visualizer)
 - **Schedule** — `chioff-status.timer` runs the generator every minute.
 
 ### Configuration

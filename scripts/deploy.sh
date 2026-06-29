@@ -29,6 +29,9 @@ sudo systemctl enable --now chioff-status.timer
 echo "==> Deploying landing page"
 sudo mkdir -p /srv/rns-landing
 sudo cp rns-landing/index.html /srv/rns-landing/index.html
+sudo cp rns-landing/visualizer.html /srv/rns-landing/visualizer.html
+# Serve the live status snapshot to the Network Visualizer (read-only symlink).
+sudo ln -sf /var/lib/chicagooffline-rns/status.json /srv/rns-landing/status.json
 sudo cp reticulum/pages/*.mu /home/rns/.nomadnetwork/storage/pages/
 sudo chown -R rns:rns /home/rns/.nomadnetwork/storage/pages
 
