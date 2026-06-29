@@ -7,9 +7,14 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Gated by the 'production' environment: a maintainer must approve each
+    # deployment before it runs as root on the node (see repo Environments).
+    environment: production
+    permissions:
+      contents: read
     steps:
       - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@029f5b4aeeeb58fdfe1410a5d17f967dacf36262 # v1.0.3
         with:
           host: ${{ secrets.RNS_SSH_HOST }}
           username: ubuntu
