@@ -50,6 +50,7 @@
     <div id="controls" class="panel">
       <label for="hops">max hops: <span id="hops-val">3</span></label>
       <input id="hops" type="range" min="0" max="10" value="3" step="1">
+      <label class="toggle"><input id="consented" type="checkbox"> consented only</label>
       <label class="toggle"><input id="auto" type="checkbox" checked> auto-update</label>
     </div>
     <div id="legend" class="panel">
@@ -77,7 +78,7 @@
     const RADIUS = { self: 16, peer: 9, dest: 6, iface: 7 };
     let nodes = [], links = [], view = { x: 0, y: 0, k: 1 };
     let dragNode = null, panning = false, last = { x: 0, y: 0 }, selected = null;
-    let maxHops = 3, lastSnap = null;
+    let maxHops = 3, consentedOnly = false, lastSnap = null;
 
     function resize() {
       const r = canvas.getBoundingClientRect();
@@ -97,7 +98,7 @@
       const self = node('self', 'self', snap.node && snap.node.public_address || 'this node');
       const ifaces = (snap.interfaces || []).filter(i => i.online);
       ifaces.forEach(i => { node('iface:' + i.name, 'iface', i.name); L.push({ a: 'self', b: 'iface:' + i.name }); });
-      const entries = ((snap.path_table && snap.path_table.entries) || []).filter(e => (e.hops || 0) <= maxHops);
+      const entries = ((snap.path_table && snap.path_table.entries) || []).filter(e => (e.hops || 0) <= maxHops && (!consentedOnly || e.via_label || e.destination_label));
       entries.forEach(e => {
         const via = node('via:' + e.via, 'peer', e.via_label || e.via); via.named = !!e.via_label;
         L.push({ a: 'self', b: via.id });
@@ -185,6 +186,11 @@
     const hopsEl = document.getElementById('hops');
     hopsEl.addEventListener('input', () => {
       maxHops = +hopsEl.value; document.getElementById('hops-val').textContent = maxHops;
+      if (lastSnap) buildGraph(lastSnap);
+    });
+    const consentedEl = document.getElementById('consented');
+    consentedEl.addEventListener('change', () => {
+      consentedOnly = consentedEl.checked;
       if (lastSnap) buildGraph(lastSnap);
     });
     const autoEl = document.getElementById('auto');
