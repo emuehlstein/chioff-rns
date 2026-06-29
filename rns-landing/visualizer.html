@@ -25,6 +25,8 @@
     #controls { bottom:0.75rem; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:0.6rem; }
     #controls label { color:var(--amber); }
     #controls input[type=range] { width:160px; accent-color:var(--cyan); }
+    #controls .toggle { display:flex; align-items:center; gap:0.3rem; cursor:pointer; }
+    #controls input[type=checkbox] { accent-color:var(--cyan); }
     #hops-val { color:var(--text-bright); }
     #stats { top:0.75rem; right:0.75rem; min-width:160px; }
     #stats .val { color:var(--text-bright); }
@@ -48,6 +50,7 @@
     <div id="controls" class="panel">
       <label for="hops">max hops: <span id="hops-val">3</span></label>
       <input id="hops" type="range" min="0" max="10" value="3" step="1">
+      <label class="toggle"><input id="auto" type="checkbox" checked> auto-update</label>
     </div>
     <div id="legend" class="panel">
       <div class="row"><span class="dot" style="background:var(--cyan)"></span> Transport node (us)</div>
@@ -63,7 +66,7 @@
       <div>updated: <span class="val" id="s-updated">–</span></div>
     </div>
     <div id="info" class="panel"></div>
-    <div id="note" class="panel" style="padding:0.4rem 0.6rem;">drag · scroll to zoom · click node</div>
+    <div id="note" class="panel" style="padding:0.4rem 0.6rem;">drag · scroll to zoom · click node · zoom in for labels</div>
     <div id="status-msg">loading network…</div>
   </div>
   <script>
@@ -150,7 +153,7 @@
         const r = RADIUS[n.type] || 6;
         ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, 6.283); ctx.fillStyle = COLORS[n.type]; ctx.fill();
         if (n === selected) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke(); }
-        if (n.type === 'self' || n === selected || (n.named && (nodes.length < 60 || view.k > 1.8))) {
+        if (n.type === 'self' || n.type === 'peer' || n === selected || (n.named && nodes.length < 120) || view.k > 1.6) {
           ctx.fillStyle = '#e8ecf0'; ctx.font = '11px Courier New';
           ctx.fillText(n.label || n.id, n.x + r + 3, n.y + 3);
         }
@@ -184,7 +187,12 @@
       maxHops = +hopsEl.value; document.getElementById('hops-val').textContent = maxHops;
       if (lastSnap) buildGraph(lastSnap);
     });
-    load(); setInterval(load, 60000); loop();
+    const autoEl = document.getElementById('auto');
+    autoEl.addEventListener('change', () => { autoEl.checked ? start() : stop(); });
+    let timer = null;
+    function start() { stop(); timer = setInterval(load, 60000); }
+    function stop() { if (timer) { clearInterval(timer); timer = null; } }
+    load(); start(); loop();
   })();
   </script>
 </body>
