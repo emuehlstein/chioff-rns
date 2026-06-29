@@ -99,10 +99,12 @@
       ifaces.forEach(i => { node('iface:' + i.name, 'iface', i.name); L.push({ a: 'self', b: 'iface:' + i.name }); });
       const entries = ((snap.path_table && snap.path_table.entries) || []).filter(e => (e.hops || 0) <= maxHops);
       entries.forEach(e => {
-        const via = node('via:' + e.via, 'peer', e.via_label || e.via); via.named = !!e.via_label;
+        const viaName = e.via_name || e.via_label;
+        const via = node('via:' + e.via, 'peer', viaName || e.via); via.named = !!viaName; via.hash = e.via;
         L.push({ a: 'self', b: via.id });
         const did = 'dest:' + e.destination;
-        const d = node(did, 'dest', e.destination_label || e.destination); d.named = !!e.destination_label;
+        const destName = e.name || e.destination_label;
+        const d = node(did, 'dest', destName || e.destination); d.named = !!destName; d.hash = e.destination;
         L.push({ a: via.id, b: did, hops: e.hops });
       });
       nodes = [...N.values()]; nodeMap = N;
@@ -172,7 +174,9 @@
     function showInfo(n) {
       const el = document.getElementById('info');
       const t = { self: 'transport node', peer: 'transport peer', dest: 'destination', iface: 'interface' }[n.type];
-      el.innerHTML = '<h2>' + (n.label || n.id) + '</h2><div><span class="k">type:</span> ' + t + '</div>';
+      let html = '<h2>' + (n.label || n.id) + '</h2><div><span class="k">type:</span> ' + t + '</div>';
+      if (n.hash && n.named) html += '<div><span class="k">hash:</span> ' + n.hash + '</div>';
+      el.innerHTML = html;
       el.style.display = 'block';
     }
 
