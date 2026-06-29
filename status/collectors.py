@@ -377,11 +377,11 @@ def _parse_rnpath_text(out: str, config: Config) -> Dict[str, Any]:
         entries.append(
             {
                 "destination": anonymize_hash(dest_hash, config.public_mode, consented=config.consented),
-                "destination_full": dest_hash,
+                "destination_full": anonymize_hash(dest_hash, config.public_mode, consented=config.consented),
                 "destination_label": consent_label(dest_hash, config.consented),
                 "hops": int(m.group(2)),
                 "via": anonymize_hash(via_hash, config.public_mode, consented=config.consented),
-                "via_full": via_hash,
+                "via_full": anonymize_hash(via_hash, config.public_mode, consented=config.consented),
                 "via_label": consent_label(via_hash, config.consented),
                 "interface": (m.group(4) or "").strip(),
             }
