@@ -16,7 +16,7 @@ import time
 from typing import Any, Dict, List, Optional
 
 from . import SCHEMA_VERSION
-from .anonymize import anonymize_hash, anonymize_ip
+from .anonymize import anonymize_hash, anonymize_ip, consent_label
 from .config import Config
 from .util import parse_size_to_bytes, run, which
 
@@ -209,7 +209,7 @@ def _parse_rnstatus(text: str, config: Config) -> Dict[str, Any]:
             paths = int(m.group(1))
         m = re.search(r"Transport Instance\s+([0-9a-fA-F]+)", block)
         if m:
-            transport_id = anonymize_hash(m.group(1), config.public_mode)
+            transport_id = anonymize_hash(m.group(1), config.public_mode, consented=config.consented)
 
         iface = _parse_interface_block(header, lines[1:], config)
         if iface:
@@ -313,12 +313,15 @@ def collect_paths(config: Config, errors: List[str]) -> Dict[str, Any]:
                 hashes.append(mh.group(1))
             continue
         dest_hash = m.group(1)
+        via_hash = m.group(3)
         hashes.append(dest_hash)
         entries.append(
             {
-                "destination": anonymize_hash(dest_hash, config.public_mode),
+                "destination": anonymize_hash(dest_hash, config.public_mode, consented=config.consented),
+                "destination_label": consent_label(dest_hash, config.consented),
                 "hops": int(m.group(2)),
-                "via": anonymize_hash(m.group(3), config.public_mode),
+                "via": anonymize_hash(via_hash, config.public_mode, consented=config.consented),
+                "via_label": consent_label(via_hash, config.consented),
                 "interface": (m.group(4) or "").strip(),
             }
         )

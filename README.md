@@ -75,6 +75,23 @@ public_mode = true   # truncate peer IPs (203.0.x.x) and hashes on the public pa
 Set `public_mode = false` only for a locally served operator view that shows
 full IPs and destination hashes.
 
+### Consent allowlist
+
+Specific nodes can opt in to having their **full hash and a friendly name**
+shown publicly (path table, JSON, Network Visualizer) even when
+`public_mode = true`. Everyone else stays anonymized. Edit
+[consented-nodes.config](consented-nodes.config) (repo-managed, deployed to
+`/etc/chioff-consent.config`):
+
+```
+[consent]
+0123456789abcdef0123456789abcdef = Home RNS
+fedcba9876543210fedcba9876543210 = Bowmanville RNS
+```
+
+This is how paths between `rns.chicagooffline.com`, the home node, Bowmanville,
+etc. are exposed with names instead of truncated hashes.
+
 ### Run manually
 
 ```bash

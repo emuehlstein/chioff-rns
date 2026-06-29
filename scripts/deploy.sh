@@ -23,6 +23,9 @@ sudo chown -R rns:rns /var/lib/chicagooffline-rns
 if [ ! -f /etc/chioff-status.config ]; then
   sudo cp status.config.example /etc/chioff-status.config
 fi
+# Consent allowlist is repo-managed (edit consented-nodes.config) so deploy
+# always refreshes it. Nodes here are shown un-anonymized on the public page.
+sudo cp consented-nodes.config /etc/chioff-consent.config
 sudo systemctl daemon-reload
 sudo systemctl enable --now chioff-status.timer
 

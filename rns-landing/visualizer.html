@@ -87,10 +87,11 @@
       ifaces.forEach(i => { node('iface:' + i.name, 'iface', i.name); L.push({ a: 'self', b: 'iface:' + i.name }); });
       const entries = (snap.path_table && snap.path_table.entries) || [];
       entries.forEach(e => {
-        const via = node('via:' + e.via, 'peer', e.via); node(via.id, 'peer', e.via);
+        const via = node('via:' + e.via, 'peer', e.via_label || e.via); via.named = !!e.via_label;
         L.push({ a: 'self', b: via.id });
-        node('dest:' + e.destination, 'dest', e.destination);
-        L.push({ a: via.id, b: 'dest:' + e.destination, hops: e.hops });
+        const did = 'dest:' + e.destination;
+        const d = node(did, 'dest', e.destination_label || e.destination); d.named = !!e.destination_label;
+        L.push({ a: via.id, b: did, hops: e.hops });
       });
       nodes = [...N.values()]; links = L;
       document.getElementById('s-nodes').textContent = nodes.length;
@@ -131,7 +132,7 @@
         const r = RADIUS[n.type] || 6;
         ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, 6.283); ctx.fillStyle = COLORS[n.type]; ctx.fill();
         if (n === selected) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke(); }
-        if (n.type === 'self' || n === selected) {
+        if (n.type === 'self' || n.named || n === selected) {
           ctx.fillStyle = '#e8ecf0'; ctx.font = '11px Courier New';
           ctx.fillText(n.label || n.id, n.x + r + 3, n.y + 3);
         }
