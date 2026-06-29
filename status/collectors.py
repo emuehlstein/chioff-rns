@@ -285,18 +285,19 @@ def _parse_interface_block(header: str, body: List[str], config: Config) -> Opti
 # ---------------------------------------------------------------------------
 
 
-def collect_paths(config: Config, errors: List[str]) -> Dict[str, Any]:
+def collect_paths(config: Config, errors: List[str], names: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
     """Parse the rnpath path table using JSON output (-j flag).
 
     Falls back to text parsing if JSON output is unavailable (older rnpath).
     """
+    names = names or {}
     # Try JSON output first — faster and more reliable.
     cmd_json = [config.rnpath_cmd, "--table", "-j"]
     if config.rns_config:
         cmd_json += ["--config", config.rns_config]
     rc, out, err = run(cmd_json, timeout=config.command_timeout)
     if rc == 0 and out.strip():
-        return _parse_rnpath_json(out, config, errors)
+        return _parse_rnpath_json(out, config, errors, names)
 
     # Fallback: text parsing for older rnpath versions.
     cmd_text = [config.rnpath_cmd, "--table"]
@@ -306,11 +307,12 @@ def collect_paths(config: Config, errors: List[str]) -> Dict[str, Any]:
     if rc != 0 or not out.strip():
         errors.append(f"rnpath: rc={rc} {err.strip() or 'no output'}")
         return {"available": False, "count": 0, "entries": [], "hashes": []}
-    return _parse_rnpath_text(out, config)
+    return _parse_rnpath_text(out, config, names)
 
 
-def _parse_rnpath_json(out: str, config: Config, errors: List[str]) -> Dict[str, Any]:
+def _parse_rnpath_json(out: str, config: Config, errors: List[str], names: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
     """Parse rnpath JSON output (rnpath --table -j)."""
+    names = names or {}
     import json as _json
     try:
         raw = _json.loads(out)
@@ -331,9 +333,11 @@ def _parse_rnpath_json(out: str, config: Config, errors: List[str]) -> Dict[str,
                 {
                     "destination": anonymize_hash(dest_hash, config.public_mode),
                     "destination_full": dest_hash,
+                    "name": names.get(dest_hash.lower()),
                     "hops": hops,
                     "via": anonymize_hash(via_hash, config.public_mode),
                     "via_full": via_hash,
+                    "via_name": names.get(via_hash.lower()),
                     "interface": iface,
                 }
             )
@@ -350,8 +354,9 @@ def _parse_rnpath_json(out: str, config: Config, errors: List[str]) -> Dict[str,
     }
 
 
-def _parse_rnpath_text(out: str, config: Config) -> Dict[str, Any]:
+def _parse_rnpath_text(out: str, config: Config, names: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
     """Parse rnpath plain-text output (fallback for older rnpath versions)."""
+    names = names or {}
     entries: List[Dict[str, Any]] = []
     hashes: List[str] = []
     for line in out.splitlines():
@@ -379,10 +384,12 @@ def _parse_rnpath_text(out: str, config: Config) -> Dict[str, Any]:
                 "destination": anonymize_hash(dest_hash, config.public_mode, consented=config.consented),
                 "destination_full": anonymize_hash(dest_hash, config.public_mode, consented=config.consented),
                 "destination_label": consent_label(dest_hash, config.consented),
+                "name": names.get(dest_hash.lower()),
                 "hops": int(m.group(2)),
                 "via": anonymize_hash(via_hash, config.public_mode, consented=config.consented),
                 "via_full": anonymize_hash(via_hash, config.public_mode, consented=config.consented),
                 "via_label": consent_label(via_hash, config.consented),
+                "via_name": names.get(via_hash.lower()),
                 "interface": (m.group(4) or "").strip(),
             }
         )
@@ -680,8 +687,8 @@ def collect_snapshot(config: Config) -> Dict[str, Any]:
     services = collect_services(config, errors)
     system = collect_system(config, errors)
     rnstatus = collect_rnstatus(config, errors)
-    paths = collect_paths(config, errors)
     names = collect_names(config, errors)
+    paths = collect_paths(config, errors, names)
     tcp = collect_tcp_peers(config, errors)
     journal = collect_journal(config, errors)
 
@@ -729,10 +736,7 @@ def collect_snapshot(config: Config) -> Dict[str, Any]:
         "path_table": {
             "available": paths.get("available", False),
             "count": paths.get("count", 0),
-            "entries": [
-                dict(e, name=names.get(e.get("destination_full", "").lower()))
-                for e in paths.get("entries", [])
-            ],
+            "entries": paths.get("entries", []),
             "hashes": paths.get("hashes", []),
         },
         "peer_attribution": {
