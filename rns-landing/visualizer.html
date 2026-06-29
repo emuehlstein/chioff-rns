@@ -167,7 +167,7 @@
     canvas.addEventListener('mousedown', e => { const n = hit(toWorld(e)); if (n) { dragNode = n; selected = n; showInfo(n); } else { panning = true; selected = null; document.getElementById('info').style.display = 'none'; } last = { x: e.clientX, y: e.clientY }; canvas.classList.add('dragging'); });
     canvas.addEventListener('mousemove', e => { if (dragNode) { const p = toWorld(e); dragNode.x = p.x; dragNode.y = p.y; dragNode.vx = dragNode.vy = 0; } else if (panning) { view.x += e.clientX - last.x; view.y += e.clientY - last.y; last = { x: e.clientX, y: e.clientY }; } });
     window.addEventListener('mouseup', () => { dragNode = null; panning = false; canvas.classList.remove('dragging'); });
-    canvas.addEventListener('wheel', e => { e.preventDefault(); const f = e.deltaY < 0 ? 1.1 : 0.9; view.k = Math.max(0.2, Math.min(5, view.k * f)); }, { passive: false });
+    canvas.addEventListener('wheel', e => { e.preventDefault(); const r = canvas.getBoundingClientRect(); const mx = e.clientX - r.left, my = e.clientY - r.top; const f = e.deltaY < 0 ? 1.1 : 0.9; const k = Math.max(0.2, Math.min(5, view.k * f)); view.x = mx - (mx - view.x) * (k / view.k); view.y = my - (my - view.y) * (k / view.k); view.k = k; }, { passive: false });
 
     function showInfo(n) {
       const el = document.getElementById('info');
