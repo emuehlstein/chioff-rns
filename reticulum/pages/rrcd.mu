@@ -36,7 +36,7 @@ Join `!chicagooffline`! after connecting.
 `Ffff
 As of NomadNet 1.1.0, RRC is built in as a first-class client.
 
-`F3f1  1.`Ffff  Connect to our transport (see `[`F0cfConnect`:/page/connect.mu]`Ffff page)
+`F3f1  1.`Ffff  Connect to our transport (see `F0cf`[Connect`9f2985319b6785103ebf227efbb2abc4:/page/connect.mu]`Ffff page)
 `F3f1  2.`Ffff  Launch `!nomadnet`!
 `F3f1  3.`Ffff  Navigate to the `!Chat`! section
 `F3f1  4.`Ffff  Add the hub hash above and join `!chicagooffline`!
@@ -61,4 +61,4 @@ As of NomadNet 1.1.0, RRC is built in as a first-class client.
 
 `F555
 -
-`c`[`F0cf<< Back to Home`:/page/index.mu]
+`c`F0cf`[Back to Home`9f2985319b6785103ebf227efbb2abc4:/page/index.mu]

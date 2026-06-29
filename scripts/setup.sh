@@ -22,6 +22,11 @@ sudo cp reticulum/config/reticulum.config /etc/reticulum/config
 sudo cp reticulum/config/nomadnet.config /etc/reticulum/nomadnetconfig
 sudo chown -R rns:rns /etc/reticulum
 
+echo "==> Deploying lxmd config"
+sudo mkdir -p /home/rns/.lxmd
+sudo cp lxmd/config /home/rns/.lxmd/config
+sudo chown -R rns:rns /home/rns/.lxmd
+
 echo "==> Setting up status generator"
 sudo mkdir -p /var/lib/chicagooffline-rns
 sudo chown -R rns:rns /var/lib/chicagooffline-rns

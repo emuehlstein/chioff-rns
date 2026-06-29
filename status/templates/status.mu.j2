@@ -33,10 +33,10 @@
 {{ C_DIM }}Load      {{ C_BODY }}{{ '%.2f'|format(sys.load[0]) }} {{ '%.2f'|format(sys.load[1]) }} {{ '%.2f'|format(sys.load[2]) }}  `F888({{ sys.cpu_count }} cpu){{ C_BODY }}
 {% endif %}
 {% if sys.memory %}
-{{ C_DIM }}Memory    {{ C_BODY }}{{ sys.memory.used|hb }} / {{ sys.memory.total|hb }}{% if sys.memory.percent is not none %}  {% if sys.memory.percent >= 90 %}{{ C_BAD }}{% elif sys.memory.percent >= 75 %}{{ C_WARN }}{% else %}{{ C_GOOD }}{% endif %}{{ sys.memory.percent }}%{{ C_BODY }}{% endif %}
+{{ C_DIM }}Memory    {{ C_BODY }}{{ sys.memory.used|hb }} / {{ sys.memory.total|hb }}{% if sys.memory.percent is not none %}  {% if sys.memory.percent >= 90 %}{{ C_BAD }}{% elif sys.memory.percent >= 75 %}{{ C_WARN }}{% else %}{{ C_GOOD }}{% endif %}{{ sys.memory.percent }}%{{ C_BODY }}{% endif +%}
 {% endif %}
 {% if sys.disk %}
-{{ C_DIM }}Disk      {{ C_BODY }}{{ sys.disk.used|hb }} / {{ sys.disk.total|hb }}{% if sys.disk.percent is not none %}  {% if sys.disk.percent >= 90 %}{{ C_BAD }}{% elif sys.disk.percent >= 75 %}{{ C_WARN }}{% else %}{{ C_GOOD }}{% endif %}{{ sys.disk.percent }}%{{ C_BODY }}{% endif %}
+{{ C_DIM }}Disk      {{ C_BODY }}{{ sys.disk.used|hb }} / {{ sys.disk.total|hb }}{% if sys.disk.percent is not none %}  {% if sys.disk.percent >= 90 %}{{ C_BAD }}{% elif sys.disk.percent >= 75 %}{{ C_WARN }}{% else %}{{ C_GOOD }}{% endif %}{{ sys.disk.percent }}%{{ C_BODY }}{% endif +%}
 {% endif %}
 
 {{ C_HEAD }}
@@ -85,17 +85,46 @@
 {{ C_HEAD }}
 -
 
->Peer Attribution
+>Path Table
 
 {{ C_BODY }}
-{% if s.peer_attribution.instrumented and s.peer_attribution.peers %}
-{% for peer in s.peer_attribution.peers %}
-{{ C_HL }}{{ peer.id }}{{ C_BODY }}  {{ peer.destinations }} destinations
+{% if s.path_table.available and s.path_table.entries %}
+{% set hop0 = s.path_table.entries | selectattr('hops', 'equalto', 0) | list %}
+{% set hop1 = s.path_table.entries | selectattr('hops', 'equalto', 1) | list %}
+{% set hop2 = s.path_table.entries | selectattr('hops', 'equalto', 2) | list %}
+{% set hop3plus = s.path_table.entries | selectattr('hops', 'greaterthan', 2) | list | sort(attribute='hops') %}
+{% if hop0 %}
+`F888This node (0 hops){{ C_BODY }}
+{% for e in hop0 %}
+  {{ C_GOOD }}●{{ C_BODY }} {{ C_HL }}{{ e.name if e.name else e.destination }}{{ C_BODY }}{% if e.name %}  `F888{{ e.destination }}{% endif %}{{ C_BODY }}
 {% endfor %}
-{% else %}
-{{ C_WARN }}Not yet instrumented.{{ C_BODY }}
 
-`F888{{ s.peer_attribution.note }}{{ C_BODY }}
+{% endif %}
+{% if hop1 %}
+`F888Direct peers (1 hop){{ C_BODY }}
+{% for e in hop1 %}
+  {{ C_GOOD }}●{{ C_BODY }} {{ C_HL }}{{ e.name if e.name else e.destination }}{{ C_BODY }}{% if e.name %}  `F888{{ e.destination }}{% endif %}{{ C_BODY }}
+{% endfor %}
+
+{% endif %}
+{% if hop2 %}
+`F888Near (2 hops){{ C_BODY }}
+{% for e in hop2 %}
+  `Ffa0●{{ C_BODY }} {{ C_HL }}{{ e.name if e.name else e.destination }}{{ C_BODY }}{% if e.name %}  `F888{{ e.destination }}{% endif %}{{ C_BODY }}
+{% endfor %}
+
+{% endif %}
+{% if hop3plus %}
+{% set named_count = hop3plus | selectattr('name') | list | length %}
+{% set unnamed_count = hop3plus | length - named_count %}
+`F888Distant (3+ hops) — {{ hop3plus | length }} destinations
+  ({{ named_count }} named, {{ unnamed_count }} unnamed){{ C_BODY }}
+{{ C_HEAD }}`[Full node list`9f2985319b6785103ebf227efbb2abc4:/page/nodes.mu]{{ C_BODY }}
+{% endif %}
+{% elif s.path_table.available %}
+`F888Path table is empty.{{ C_BODY }}
+{% else %}
+`F888rnpath not available — set rnpath_cmd in config.{{ C_BODY }}
 {% endif %}
 
 {{ C_HEAD }}
@@ -142,7 +171,7 @@ Works with `!Sideband`!, `!NomadNet`!, or any Reticulum app.
 `F3f1  >>  {{ C_BODY }}{{ svc }}
 {% endfor %}
 
-`[{{ C_HEAD }}Connect details`:/page/connect.mu]{{ C_BODY }}  `[{{ C_HEAD }}Home`:/page/index.mu]{{ C_BODY }}
+{{ C_HEAD }}`[Connect details`9f2985319b6785103ebf227efbb2abc4:/page/connect.mu]{{ C_BODY }}  {{ C_HEAD }}`[Home`9f2985319b6785103ebf227efbb2abc4:/page/index.mu]{{ C_BODY }}
 
 {% if s.errors %}
 {{ C_HEAD }}

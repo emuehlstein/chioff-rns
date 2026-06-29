@@ -14,8 +14,13 @@ sudo cp reticulum/config/reticulum.config /etc/reticulum/config
 sudo cp reticulum/config/nomadnet.config /etc/reticulum/nomadnetconfig
 sudo chown -R rns:rns /etc/reticulum
 
+echo "==> Updating lxmd config"
+sudo mkdir -p /home/rns/.lxmd
+sudo cp lxmd/config /home/rns/.lxmd/config
+sudo chown -R rns:rns /home/rns/.lxmd
+
 echo "==> Updating status generator"
-sudo -u rns pip3 install --user -q -r requirements.txt
+sudo -u rns python3 -m pip install --user -q --break-system-packages -r requirements.txt
 sudo cp systemd/chioff-status.service /etc/systemd/system/
 sudo cp systemd/chioff-status.timer /etc/systemd/system/
 sudo mkdir -p /var/lib/chicagooffline-rns

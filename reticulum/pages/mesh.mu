@@ -41,7 +41,7 @@ separate frequencies.
   TX Power:         22 dBm (hardware dependent)
 `a`Ffff
 
-See the `[`F0cfConnect`:/page/connect.mu]`Ffff page for full RNode config.
+See the `F0cf`[Connect`9f2985319b6785103ebf227efbb2abc4:/page/connect.mu]`Ffff page for full RNode config.
 
 `F0cf
 -
@@ -75,4 +75,4 @@ Pre-built observer firmware at:
 
 `F555
 -
-`c`[`F0cf<< Back to Home`:/page/index.mu]
+`c`F0cf`[Back to Home`9f2985319b6785103ebf227efbb2abc4:/page/index.mu]
