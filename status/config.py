@@ -45,6 +45,10 @@ class Config:
     page_output: str = "/home/rns/.nomadnetwork/storage/pages/status.mu"
     disk_path: str = "/"
 
+    # --- consent allowlist: full hash -> friendly label ---
+    consent_file: str = "/etc/chioff-consent.config"
+    consented: Dict[str, str] = field(default_factory=dict)
+
     # --- history (SQLite) ---
     history_enabled: bool = True
     history_db: str = "/var/lib/chicagooffline-rns/history.db"
@@ -166,4 +170,34 @@ def load_config(path: Optional[str] = None) -> Config:
         cfg.network_blurb = _getstr(parser, "chicago", "blurb", cfg.network_blurb)
         cfg.local_services = _getlist(parser, "chicago", "local_services", cfg.local_services)
 
+    cfg.consent_file = _getstr(parser, "paths", "consent_file", cfg.consent_file)
+    # Inline [consent] entries first, then a standalone consent file (which wins).
+    if parser.has_section("consent"):
+        cfg.consented.update(_normalize_consent(parser.items("consent")))
+    cfg.consented.update(_load_consent_file(cfg.consent_file))
+
     return cfg
+
+
+def _normalize_consent(items) -> Dict[str, str]:
+    """Lowercase hashes, keep labels; drop blanks. Maps hash -> label."""
+    out: Dict[str, str] = {}
+    for key, value in items:
+        h = (key or "").strip().lower()
+        if h:
+            out[h] = (value or "").strip() or h[:8]
+    return out
+
+
+def _load_consent_file(path: str) -> Dict[str, str]:
+    if not path or not os.path.isfile(path):
+        return {}
+    parser = configparser.ConfigParser()
+    parser.optionxform = str  # preserve hash case before we lowercase it
+    try:
+        parser.read(path)
+    except configparser.Error:
+        return {}
+    if parser.has_section("consent"):
+        return _normalize_consent(parser.items("consent"))
+    return {}

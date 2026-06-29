@@ -29,6 +29,9 @@ nomadnet = nomadnet.service
 json_output = /var/lib/chicagooffline-rns/status.json
 page_output = /home/rns/.nomadnetwork/storage/pages/status.mu
 disk_path = /
+# Consent allowlist of nodes shown un-anonymized even in public_mode
+# (repo-managed in consented-nodes.config, deployed here):
+consent_file = /etc/chioff-consent.config
 
 [history]
 enabled = true

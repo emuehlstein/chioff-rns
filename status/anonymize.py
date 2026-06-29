@@ -3,12 +3,17 @@
 When ``public_mode`` is enabled we never expose full peer IP addresses or
 destination hashes on the public NomadNet page. In operator mode the raw
 values are preserved so a local operator can see full detail.
+
+A consent allowlist (mapping full hash -> friendly label) lets specific nodes
+opt in to having their full hash and a friendly name shown even on the public
+page. This is how we expose paths between known, consenting nodes (e.g.
+rns.chicagooffline.com, home, bowmanville) while still redacting everyone else.
 """
 from __future__ import annotations
 
 import ipaddress
 import re
-from typing import Optional
+from typing import Dict, Optional
 
 
 def anonymize_ip(value: str, public_mode: bool) -> str:
@@ -46,8 +51,46 @@ def anonymize_ip(value: str, public_mode: bool) -> str:
 _HASH_RE = re.compile(r"^[0-9a-fA-F]{8,}$")
 
 
-def anonymize_hash(value: str, public_mode: bool, keep: int = 8) -> str:
-    """Truncate a Reticulum/destination hash to ``keep`` hex chars in public mode."""
+def _match_consent(value: str, consented: Optional[Dict[str, str]]) -> Optional[str]:
+    """Return the canonical consented hash if ``value`` matches one, else None.
+
+    Matching is case-insensitive and tolerant of an entered prefix: a configured
+    hash matches when either side is a prefix of the other (>= 8 hex chars).
+    """
+    if not consented or not value:
+        return None
+    candidate = value.strip().lower()
+    if candidate in consented:
+        return candidate
+    for full in consented:
+        if len(candidate) >= 8 and (full.startswith(candidate) or candidate.startswith(full)):
+            return full
+    return None
+
+
+def is_consented(value: str, consented: Optional[Dict[str, str]]) -> bool:
+    return _match_consent(value, consented) is not None
+
+
+def consent_label(value: str, consented: Optional[Dict[str, str]]) -> Optional[str]:
+    """Friendly label for a consented hash, or None."""
+    full = _match_consent(value, consented)
+    return consented.get(full) if full else None
+
+
+def anonymize_hash(
+    value: str,
+    public_mode: bool,
+    keep: int = 8,
+    consented: Optional[Dict[str, str]] = None,
+) -> str:
+    """Truncate a Reticulum/destination hash to ``keep`` hex chars in public mode.
+
+    Hashes on the consent allowlist are always shown in full, regardless of
+    public_mode, since their operators opted in.
+    """
+    if is_consented(value, consented):
+        return value.strip().lower()
     if not public_mode or not value:
         return value
     candidate = value.strip()

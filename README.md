@@ -43,7 +43,9 @@ Secrets needed in repo: `RNS_SSH_HOST`, `RNS_SSH_KEY`.
 ## Status page
 
 A periodically generated NomadNet page reports live node health at
-`/page/status.mu` (linked from the home page).
+`/page/status.mu` (linked from the home page). The web landing page also hosts
+a **Network Visualizer** (`visualizer.html`) — a force-directed graph of the
+node, its transport peers, and learned destinations, fed by `status.json`.
 
 - **Collector** — `status/collectors.py` gathers data from `rnstatus`,
   `rnpath --table`, `journalctl -u rnsd`, `systemctl`, `ss` (TCP port 4242),
@@ -57,6 +59,7 @@ A periodically generated NomadNet page reports live node health at
 - **Outputs** —
   - page: `/home/rns/.nomadnetwork/storage/pages/status.mu`
   - JSON: `/var/lib/chicagooffline-rns/status.json`
+  - web: `/srv/rns-landing/status.json` (symlink, feeds the Network Visualizer)
 - **Schedule** — `chioff-status.timer` runs the generator every minute.
 
 ### Configuration
@@ -71,6 +74,23 @@ public_mode = true   # truncate peer IPs (203.0.x.x) and hashes on the public pa
 
 Set `public_mode = false` only for a locally served operator view that shows
 full IPs and destination hashes.
+
+### Consent allowlist
+
+Specific nodes can opt in to having their **full hash and a friendly name**
+shown publicly (path table, JSON, Network Visualizer) even when
+`public_mode = true`. Everyone else stays anonymized. Edit
+[consented-nodes.config](consented-nodes.config) (repo-managed, deployed to
+`/etc/chioff-consent.config`):
+
+```
+[consent]
+0123456789abcdef0123456789abcdef = Home RNS
+fedcba9876543210fedcba9876543210 = Bowmanville RNS
+```
+
+This is how paths between `rns.chicagooffline.com`, the home node, Bowmanville,
+etc. are exposed with names instead of truncated hashes.
 
 ### Run manually
 
