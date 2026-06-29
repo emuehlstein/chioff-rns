@@ -730,7 +730,11 @@ def collect_snapshot(config: Config) -> Dict[str, Any]:
             "available": paths.get("available", False),
             "count": paths.get("count", 0),
             "entries": [
-                dict(e, name=names.get(e.get("destination_full", "").lower()))
+                dict(
+                    e,
+                    name=names.get(e.get("destination_full", "").lower()),
+                    via_name=names.get(e.get("via_full", "").lower()),
+                )
                 for e in paths.get("entries", [])
             ],
             "hashes": paths.get("hashes", []),
