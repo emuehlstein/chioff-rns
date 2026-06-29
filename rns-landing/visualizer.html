@@ -99,10 +99,10 @@
       ifaces.forEach(i => { node('iface:' + i.name, 'iface', i.name); L.push({ a: 'self', b: 'iface:' + i.name }); });
       const entries = ((snap.path_table && snap.path_table.entries) || []).filter(e => (e.hops || 0) <= maxHops);
       entries.forEach(e => {
-        const via = node('via:' + e.via, 'peer', e.via_label || e.via); via.named = !!e.via_label;
+        const via = node('via:' + e.via, 'peer', e.via_name || e.via_label || e.via_full || e.via); via.named = !!(e.via_name || e.via_label);
         L.push({ a: 'self', b: via.id });
         const did = 'dest:' + e.destination;
-        const d = node(did, 'dest', e.destination_label || e.destination); d.named = !!e.destination_label;
+        const d = node(did, 'dest', e.name || e.destination_label || e.destination_full || e.destination); d.named = !!(e.name || e.destination_label);
         L.push({ a: via.id, b: did, hops: e.hops });
       });
       nodes = [...N.values()]; nodeMap = N;
@@ -153,7 +153,7 @@
         const r = RADIUS[n.type] || 6;
         ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, 6.283); ctx.fillStyle = COLORS[n.type]; ctx.fill();
         if (n === selected) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke(); }
-        if (n.type === 'self' || n.type === 'peer' || n === selected || (n.named && nodes.length < 120) || view.k > 1.6) {
+        if (n.type === 'self' || n.type === 'peer' || n === selected || (n.named && nodes.length < 400) || view.k > 1.6) {
           ctx.fillStyle = '#e8ecf0'; ctx.font = '11px Courier New';
           ctx.fillText(n.label || n.id, n.x + r + 3, n.y + 3);
         }
