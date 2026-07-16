@@ -45,8 +45,25 @@ class History:
         os.makedirs(os.path.dirname(db_path) or ".", exist_ok=True)
         self.conn = sqlite3.connect(db_path, timeout=10)
         self.conn.row_factory = sqlite3.Row
+        # Incremental auto-vacuum lets us reclaim freed pages cheaply after
+        # prunes without a full-file VACUUM (which needs ~2x disk + lots of
+        # RAM to rewrite the whole DB). Only takes effect on a fresh file or
+        # after a one-time full VACUUM, so we also VACUUM once if the DB is
+        # still in the default (auto_vacuum=NONE) mode. Prevents the snapshot
+        # blob table from ballooning the file unbounded (see 2026-07-15
+        # incident: history.db grew to 14 GB and filled the disk).
+        self.conn.execute("PRAGMA auto_vacuum=INCREMENTAL")
+        mode = self.conn.execute("PRAGMA auto_vacuum").fetchone()
         self.conn.executescript(_SCHEMA)
         self.conn.commit()
+        if mode is not None and int(mode[0]) == 0:
+            # DB predates incremental auto-vacuum; convert it once. This full
+            # VACUUM is only paid on the first run after this change ships.
+            try:
+                self.conn.execute("VACUUM")
+                self.conn.commit()
+            except sqlite3.Error:
+                pass
 
     def close(self) -> None:
         try:
@@ -128,6 +145,20 @@ class History:
         self.conn.execute("DELETE FROM snapshots WHERE ts < ?", (cutoff,))
         self.conn.commit()
 
+    # -- housekeeping ----------------------------------------------------
+    def reclaim(self) -> None:
+        """Return freed pages to the OS after prunes.
+
+        With auto_vacuum=INCREMENTAL this is a cheap, bounded operation (it
+        only touches the free-page list), unlike a full VACUUM. Keeps the
+        file from growing without bound as snapshot blobs churn.
+        """
+        try:
+            self.conn.execute("PRAGMA incremental_vacuum")
+            self.conn.commit()
+        except sqlite3.Error:
+            pass
+
 
 def apply_history(snapshot: Dict[str, Any], config) -> Dict[str, Any]:
     """Enrich a snapshot with history-derived fields and persist state.
@@ -162,6 +193,7 @@ def apply_history(snapshot: Dict[str, Any], config) -> Dict[str, Any]:
         history.prune_paths(config.history_retention_hours, now)
         history.prune_events(config.history_retention_hours, now)
         history.prune_snapshots(config.history_retention_hours, now)
+        history.reclaim()
     except Exception as exc:
         snapshot.setdefault("errors", []).append(f"history: {exc}")
         snapshot.setdefault("network", {}).setdefault("new_paths_1h", None)
