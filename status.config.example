@@ -36,7 +36,13 @@ consent_file = /etc/chioff-consent.config
 [history]
 enabled = true
 db = /var/lib/chicagooffline-rns/history.db
+# Retention for paths + events (cheap, small rows).
 retention_hours = 168
+# Retention for archived full-JSON snapshots. These are written every run
+# (~60s) and dominate DB size, so keep this MUCH shorter than retention_hours.
+# On 2026-07-15 and again 2026-08-03 a 168h snapshot window grew history.db
+# to 14 GB and filled the root disk. Set <= 0 to fall back to retention_hours.
+snapshot_retention_hours = 24
 
 [announces]
 window_minutes = 15
