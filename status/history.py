@@ -192,7 +192,12 @@ def apply_history(snapshot: Dict[str, Any], config) -> Dict[str, Any]:
         history.archive_snapshot(snapshot)
         history.prune_paths(config.history_retention_hours, now)
         history.prune_events(config.history_retention_hours, now)
-        history.prune_snapshots(config.history_retention_hours, now)
+        # Snapshots are the DB's dominant weight (full JSON blob per run,
+        # every ~60s), so prune them on a shorter window than paths/events.
+        # Fall back to the shared retention if snapshot_retention_hours is
+        # unset/non-positive.
+        snap_retention = getattr(config, "snapshot_retention_hours", 0) or config.history_retention_hours
+        history.prune_snapshots(snap_retention, now)
         history.reclaim()
     except Exception as exc:
         snapshot.setdefault("errors", []).append(f"history: {exc}")

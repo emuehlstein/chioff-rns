@@ -53,6 +53,12 @@ class Config:
     history_enabled: bool = True
     history_db: str = "/var/lib/chicagooffline-rns/history.db"
     history_retention_hours: int = 168
+    # Full JSON snapshots are archived every generation run (~60s), so a long
+    # retention here dominates DB size (see 2026-07-15 / 2026-08-03 incidents:
+    # history.db hit 14 GB and filled the disk). Keep snapshots on a much
+    # shorter window than paths/events. Falls back to history_retention_hours
+    # when unset (<= 0) for backwards compatibility.
+    snapshot_retention_hours: int = 24
 
     # --- announces / events ---
     announce_window_minutes: int = 15
@@ -143,6 +149,9 @@ def load_config(path: Optional[str] = None) -> Config:
         cfg.history_db = _getstr(parser, "history", "db", cfg.history_db)
         cfg.history_retention_hours = _getint(
             parser, "history", "retention_hours", cfg.history_retention_hours
+        )
+        cfg.snapshot_retention_hours = _getint(
+            parser, "history", "snapshot_retention_hours", cfg.snapshot_retention_hours
         )
 
     if parser.has_section("announces"):
